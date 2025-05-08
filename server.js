@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+const querystring = require('querystring');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -69,15 +70,25 @@ app.get('/authorize-handler', async (req, res) => {
     console.log('Using code:', code);
     console.log('Using location ID:', locationId);
     
-    // Exchange code for tokens
+    // Exchange code for tokens - using form-urlencoded format
     try {
-      const tokenResponse = await axios.post('https://services.leadconnectorhq.com/oauth/token', {
+      // Create form data
+      const formData = querystring.stringify({
         client_id: process.env.GHL_CLIENT_ID,
         client_secret: process.env.GHL_CLIENT_SECRET,
         grant_type: 'authorization_code',
-        code,
-        redirect_uri: process.env.REDIRECT_URI,
+        code: code,
+        redirect_uri: process.env.REDIRECT_URI
       });
+      
+      const tokenResponse = await axios.post('https://services.leadconnectorhq.com/oauth/token', 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      );
       
       console.log('Token response received');
       
@@ -142,13 +153,22 @@ app.get('/dashboard', async (req, res) => {
   // Check if token is expired and needs refresh
   if (tokenData.expiresAt < Date.now()) {
     try {
-      // Refresh token
-      const refreshResponse = await axios.post('https://services.leadconnectorhq.com/oauth/token', {
+      // Refresh token - using form-urlencoded format
+      const formData = querystring.stringify({
         client_id: process.env.GHL_CLIENT_ID,
         client_secret: process.env.GHL_CLIENT_SECRET,
         grant_type: 'refresh_token',
-        refresh_token: tokenData.refreshToken,
+        refresh_token: tokenData.refreshToken
       });
+      
+      const refreshResponse = await axios.post('https://services.leadconnectorhq.com/oauth/token', 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      );
       
       const { access_token, refresh_token, expires_in } = refreshResponse.data;
       
