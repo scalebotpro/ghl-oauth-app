@@ -14,11 +14,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Health check endpoint for Render
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
-});
-
 // Home route
 app.get('/', (req, res) => {
   res.send(`
@@ -79,7 +74,7 @@ app.get('/authorize-handler', async (req, res) => {
         redirect_uri: process.env.REDIRECT_URI,
       });
       
-      console.log('Token response received');
+      console.log('Token response:', tokenResponse.data);
       
       const { access_token, refresh_token, expires_in } = tokenResponse.data;
       
@@ -322,15 +317,7 @@ app.get('/api/test-submission', async (req, res) => {
   }
 });
 
-// IMPORTANT: Explicitly listen on the port and log that we're running
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${PORT}`);
-});
-
-// Handle shutdown gracefully
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Server closed');
-  });
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
